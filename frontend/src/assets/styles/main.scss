@@ -1,0 +1,404 @@
+// Importar variables globales
+@import './variables.scss';
+
+// Mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin gradient-primary {
+  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+}
+
+@mixin gradient-accent {
+  background: linear-gradient(135deg, $accent-color 0%, $primary-color 100%);
+}
+
+@mixin card-shadow {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+@mixin card-shadow-hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+// Reset y base
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  color: $text-primary;
+  background-color: white;
+  overflow-x: hidden;
+}
+
+// Tipografía
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+h2 {
+  font-size: 2.5rem;
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+}
+
+h3 {
+  font-size: 1.75rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  color: $text-secondary;
+}
+
+// Botones
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  gap: 8px;
+  
+  &--primary {
+    background: $primary-color;
+    color: white;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    
+    &:hover {
+      background: darken($primary-color, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(30, 58, 138, 0.4);
+    }
+  }
+  
+  &--secondary {
+    background: $secondary-color;
+    color: white;
+    box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
+    
+    &:hover {
+      background: darken($secondary-color, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(15, 118, 110, 0.4);
+    }
+  }
+  
+  &--accent {
+    background: $accent-color;
+    color: white;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+    
+    &:hover {
+      background: darken($accent-color, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
+    }
+  }
+  
+  &--outline {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    
+    &:hover {
+      background: white;
+      color: $primary-color;
+    }
+  }
+  
+  &--cta {
+    background: #f87171;
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(248, 113, 113, 0.25);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    
+    &:hover {
+      background: darken(#f87171, 8%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(248, 113, 113, 0.35);
+    }
+  }
+  
+  &--large {
+    padding: 16px 32px;
+    font-size: 18px;
+  }
+  
+  &--small {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+// Contenedores
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  padding: 0 20px;
+  
+  @media (max-width: 768px) {
+    padding: 0 16px;
+  }
+}
+
+// Secciones
+.section {
+  padding: 80px 0;
+  
+  &--hero {
+    @include gradient-primary;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+    }
+  }
+  
+  &--light {
+    background: $bg-light;
+  }
+  
+  &--dark {
+    background: $bg-dark;
+    color: white;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 60px 0;
+  }
+}
+
+// Cards
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  @include card-shadow;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    @include card-shadow-hover;
+  }
+  
+  &--feature {
+    text-align: center;
+    
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      @include gradient-primary;
+      border-radius: 50%;
+      @include flex-center;
+      font-size: 32px;
+      color: white;
+    }
+  }
+  
+  &--doctor {
+    text-align: center;
+    
+    .doctor-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      object-fit: cover;
+      border: 4px solid $primary-color;
+    }
+    
+    .specialty {
+      color: $primary-color;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .experience {
+      color: $text-light;
+      font-size: 14px;
+    }
+  }
+}
+
+// Grid
+.grid {
+  display: grid;
+  gap: 2rem;
+  
+  &--2 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  &--3 {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  &--4 {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Utilidades
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mb-16 { margin-bottom: 4rem; }
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-16 { margin-top: 4rem; }
+
+.p-1 { padding: 0.25rem; }
+.p-2 { padding: 0.5rem; }
+.p-4 { padding: 1rem; }
+.p-8 { padding: 2rem; }
+.p-16 { padding: 4rem; }
+
+// Animaciones
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.6s ease-out;
+}
+
+.fade-in-right {
+  animation: fadeInRight 0.6s ease-out;
+}
+
+// Scrollbar personalizada
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-light;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $primary-color;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: $secondary-color;
+} 
