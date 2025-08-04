@@ -1,3 +1,26 @@
+#!/bin/bash
+
+echo "🚀 Subida via API de GitHub"
+echo "============================"
+echo ""
+
+# Verificar si se proporcionó el token
+if [ -z "$1" ]; then
+    echo "❌ Error: Debes proporcionar tu token de GitHub"
+    echo ""
+    echo "📝 Uso: ./upload-via-api.sh TU_TOKEN_AQUI"
+    exit 1
+fi
+
+TOKEN=$1
+REPO="nelsononkos78/webIAcontrol"
+BRANCH="main"
+
+echo "✅ Token proporcionado"
+echo "🔄 Preparando archivos para subir..."
+
+# Crear archivo temporal con el contenido del README
+cat > temp_readme.md << 'EOF'
 # 🏥 Onkos Instituto del Cáncer - Sistema de Gestión con IA
 
 ## 📋 Descripción
@@ -31,30 +54,6 @@ Sistema completo de gestión para clínica oncológica con chatbot inteligente i
 - **Base de Datos**: PostgreSQL con esquema completo
 - **Autenticación**: Sistema de login para administradores
 - **CORS**: Configurado correctamente para desarrollo
-
-### 📊 Base de Datos (PostgreSQL)
-- **Tablas**: usuarios, roles, pacientes, médicos, especialidades, citas
-- **Relaciones**: Esquema normalizado con foreign keys
-- **Datos**: Seed data incluido para pruebas
-
-## 🏗️ Estructura del Proyecto
-
-```
-onkos-system/
-├── frontend/                 # Aplicación Vue.js
-│   ├── src/
-│   │   ├── components/      # Componentes Vue
-│   │   ├── views/          # Páginas principales
-│   │   ├── assets/         # Estilos e imágenes
-│   │   └── router/         # Configuración de rutas
-│   └── public/             # Archivos públicos
-├── backend/                 # Servidor Node.js
-│   ├── server.js           # Servidor principal
-│   ├── database.js         # Configuración DB
-│   └── scripts/            # Scripts de inicialización
-├── scripts/                 # Scripts de utilidad
-└── docs/                    # Documentación
-```
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -141,29 +140,6 @@ npm run serve
 3. **Panel Admin**: Ícono de engranaje (⚙️)
 4. **Gestión**: Médicos, pacientes, citas, agenda
 
-## 🔧 Scripts de Utilidad
-
-### Instalación y Configuración
-```bash
-# Instalación completa
-./scripts/install.sh
-
-# Inicio de servidores
-./scripts/start.sh
-
-# Solo backend
-./scripts/start-server.sh
-
-# Reiniciar servidores
-./scripts/restart-servers.sh
-```
-
-### Pruebas
-```bash
-# Probar flujo de citas
-./scripts/test-appointment-flow.sh
-```
-
 ## 🔐 Seguridad
 
 ### Autenticación
@@ -213,4 +189,47 @@ MIT License - Ver [LICENSE](LICENSE) para detalles.
 
 ---
 
-**🏥 Onkos Instituto del Cáncer - Innovación en Salud con IA** 🚀 
+**🏥 Onkos Instituto del Cáncer - Innovación en Salud con IA** 🚀
+EOF
+
+echo "📤 Subiendo README.md..."
+
+# Subir README usando la API de GitHub
+curl -X PUT \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"message\": \"Initial commit: Onkos Instituto del Cáncer - Sistema completo con chatbot IA\",
+    \"content\": \"$(base64 -w 0 temp_readme.md)\",
+    \"branch\": \"$BRANCH\"
+  }" \
+  "https://api.github.com/repos/$REPO/contents/README.md"
+
+if [ $? -eq 0 ]; then
+    echo "✅ README.md subido exitosamente"
+else
+    echo "❌ Error al subir README.md"
+    rm temp_readme.md
+    exit 1
+fi
+
+# Limpiar archivo temporal
+rm temp_readme.md
+
+echo ""
+echo "🎉 ¡Contenido subido exitosamente!"
+echo ""
+echo "📋 Resumen:"
+echo "   ✅ Repositorio: https://github.com/nelsononkos78/webIAcontrol"
+echo "   ✅ README.md: Subido via API"
+echo ""
+echo "🔗 Enlaces útiles:"
+echo "   📖 README: https://github.com/nelsononkos78/webIAcontrol/blob/main/README.md"
+echo "   🏥 Proyecto: Onkos Instituto del Cáncer"
+echo ""
+echo "⚠️  Nota: Este método solo sube el README. Para subir todo el código:"
+echo "   1. Crear un token clásico (ver create-classic-token.md)"
+echo "   2. Usar git push normal"
+echo ""
+echo "🚀 ¡Tu proyecto está ahora en GitHub!" 

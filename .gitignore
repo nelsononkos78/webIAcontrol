@@ -204,4 +204,12 @@ frontend/.env.production.local
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration files
+config.env
+.env.local 
