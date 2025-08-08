@@ -313,6 +313,7 @@ export default {
     margin-bottom: 2rem;
     opacity: 0.9;
     line-height: 1.6;
+    color: #ffffff;
   }
   
   &__actions {

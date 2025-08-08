@@ -202,7 +202,7 @@
           </div>
         </div>
 
-        <div v-if="selectedMedico" class="admin-panel__calendar-container">
+        <div class="admin-panel__calendar-container">
           <div class="admin-panel__calendar-header">
             <button @click="previousMonth" class="btn btn--secondary">
               <i class="fas fa-chevron-left"></i>
@@ -243,11 +243,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div v-else class="admin-panel__empty-state">
-          <i class="fas fa-calendar-alt"></i>
-          <p>Selecciona un médico para ver su agenda</p>
         </div>
       </div>
     </div>
@@ -468,11 +463,11 @@ export default {
     calendarDays() {
       const year = this.currentDate.getFullYear()
       const month = this.currentDate.getMonth()
-      const firstDay = new Date(year, month, 1)
-      const lastDay = new Date(year, month + 1, 0)
+      const firstDay = new Date(Date.UTC(year, month, 1))
+      const lastDay = new Date(Date.UTC(year, month + 1, 0))
       
       // Obtener el día de la semana del primer día (0 = domingo, 1 = lunes, etc.)
-      let firstDayOfWeek = firstDay.getDay()
+      let firstDayOfWeek = firstDay.getUTCDay()
       // Convertir a lunes = 0, domingo = 6
       firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
       
@@ -481,22 +476,29 @@ export default {
       
       // Agregar días del mes anterior para completar la primera semana
       const startDate = new Date(firstDay)
-      startDate.setDate(startDate.getDate() - firstDayOfWeek)
+      startDate.setUTCDate(startDate.getUTCDate() - firstDayOfWeek)
       
       // Generar 42 días (6 semanas x 7 días)
       for (let i = 0; i < 42; i++) {
         const date = new Date(startDate)
-        date.setDate(startDate.getDate() + i)
+        date.setUTCDate(startDate.getUTCDate() + i)
         
-        const isToday = date.toDateString() === today.toDateString()
-        const isCurrentMonth = date.getMonth() === month
+        const dateStr = date.toISOString().split('T')[0]
+        const isToday = date.toISOString().split('T')[0] === today.toISOString().split('T')[0]
+        const isCurrentMonth = date.getUTCMonth() === month
+        
+        // Buscar citas para este día
+        const citasDelDia = this.citas.filter(cita => {
+          const citaDate = new Date(cita.fecha)
+          return citaDate.toISOString().split('T')[0] === dateStr
+        })
         
         days.push({
-          date: date.toISOString().split('T')[0],
-          dayNumber: date.getDate(),
+          date: dateStr,
+          dayNumber: date.getUTCDate(),
           isCurrentMonth,
           isToday,
-          appointments: [] // Se llenará con las citas del día
+          appointments: citasDelDia
         })
       }
       
@@ -504,19 +506,44 @@ export default {
     },
     selectedDateFormatted() {
       if (!this.selectedDate) return '';
-      return new Date(this.selectedDate.date).toLocaleDateString('es-ES', { month: 'numeric', day: 'numeric' });
+      // Usamos la fecha directamente sin ajustes de zona horaria
+      const [year, month, day] = this.selectedDate.date.split('-');
+      const fecha = new Date(year, month - 1, day);
+      return fecha.toLocaleDateString('es-ES', { 
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
     }
   },
-  watch: {
-    selectedMedico(newValue) {
-      const medicoId = parseInt(newValue)
-      console.log('👁️ Watcher: selectedMedico cambió a:', medicoId, '(original:', newValue, ') activeTab:', this.activeTab)
-      if (medicoId && this.activeTab === 'agenda') {
-        console.log('✅ Ejecutando loadCitas desde watcher')
-        this.loadCitas()
+      watch: {
+      selectedMedico: {
+        immediate: true,
+        handler(newValue) {
+          if (this.activeTab === 'agenda') {
+            this.loadCitas()
+          }
+        }
+      },
+      activeTab: {
+        immediate: true,
+        handler(newValue) {
+          if (newValue === 'agenda') {
+            this.loadCitas()
+          }
+        }
+      },
+      citas: {
+        deep: true,
+        handler() {
+          if (this.activeTab === 'agenda') {
+            this.$nextTick(() => {
+              this.updateCalendarDays()
+            })
+          }
+        }
       }
-    }
-  },
+    },
   async mounted() {
     // Verificar si hay token de admin
     const token = localStorage.getItem('adminToken')
@@ -558,19 +585,23 @@ export default {
     },
     
     async loadCitas() {
-      if (this.selectedMedico) {
-        try {
+      try {
+        let url = '/api/admin/citas'
+        if (this.selectedMedico) {
           const medicoId = parseInt(this.selectedMedico)
-          console.log('🔄 Cargando citas para médico ID:', medicoId, '(tipo:', typeof medicoId, ')')
-          const response = await axios.get(`/api/admin/citas?medico_id=${medicoId}`)
-          console.log('📊 Citas cargadas:', response.data)
-          this.citas = response.data
-          this.updateCalendarDays()
-        } catch (error) {
-          console.error('Error cargando citas:', error)
+          url = `/api/admin/citas?medico_id=${medicoId}`
+          console.log('🔄 Cargando citas para médico ID:', medicoId)
+        } else {
+          url = '/api/admin/citas'
+          console.log('🔄 Cargando todas las citas')
         }
-      } else {
-        console.log('❌ No hay médico seleccionado')
+        
+        const response = await axios.get(url)
+        console.log('📊 Citas cargadas:', response.data)
+        this.citas = response.data
+      } catch (error) {
+        console.error('Error cargando citas:', error)
+        this.citas = []
       }
     },
     
@@ -700,7 +731,11 @@ export default {
     async showCitasDetails() {
       if (this.selectedDate) {
         try {
-          const response = await axios.get(`/api/admin/citas?fecha=${this.selectedDate.date}`);
+          // Usamos directamente la fecha del día seleccionado sin ajustes de zona horaria
+          const fechaStr = this.selectedDate.date;
+          console.log('📅 Consultando citas para fecha:', fechaStr);
+          
+          const response = await axios.get(`/api/admin/citas?fecha=${fechaStr}`);
           this.selectedDateCitas = response.data;
           this.showCitasModal = true;
         } catch (error) {
@@ -738,7 +773,10 @@ export default {
 
     formatCitaTime(dateString) {
       const date = new Date(dateString);
-      return date.toLocaleTimeString('es-ES', { hour: 'numeric', minute: 'numeric' });
+      // Extraemos solo la hora y minutos sin ajustes de zona horaria
+      const hours = date.getUTCHours().toString().padStart(2, '0');
+      const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+      return `${hours}:${minutes}`;
     },
     
     // Método para iniciar actualizaciones en tiempo real

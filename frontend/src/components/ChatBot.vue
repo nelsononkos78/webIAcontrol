@@ -225,6 +225,7 @@ export default {
         this.isTyping = false
         this.$nextTick(() => {
           this.scrollToBottom()
+          this.restoreFocus()
         })
       }
     },
@@ -296,6 +297,10 @@ export default {
       this.messages.push(message)
       this.$nextTick(() => {
         this.scrollToBottom()
+        // Restaurar foco al input después de cada mensaje del bot
+        if (message.type === 'bot') {
+          this.restoreFocus()
+        }
       })
       
       // Mostrar notificación si el chat está cerrado
@@ -309,6 +314,14 @@ export default {
       if (container) {
         container.scrollTop = container.scrollHeight
       }
+    },
+    
+    restoreFocus() {
+      this.$nextTick(() => {
+        if (this.isOpen && this.$refs.messageInput) {
+          this.$refs.messageInput.focus()
+        }
+      })
     },
     
     formatMessage(text) {
@@ -397,6 +410,7 @@ export default {
           
         case 'especialidad':
           this.appointmentData.especialidad = userMessage
+          console.log('📝 Especialidad guardada:', this.appointmentData.especialidad)
           this.currentStep = 'fecha'
           return '¿Qué fecha prefieres para tu cita? (formato: DD/MM/AAAA)'
           
@@ -530,6 +544,8 @@ export default {
     },
     
     async confirmarCita() {
+      console.log('🔍 Confirmando cita con especialidad:', this.appointmentData.especialidad)
+      
       const especialidades = {
         'Oncología Médica': 'Oncología Médica',
         'Radioterapia': 'Radioterapia',
@@ -541,6 +557,7 @@ export default {
       }
       
       const especialidadNombre = especialidades[this.appointmentData.especialidad] || this.appointmentData.especialidad
+      console.log('📝 Especialidad normalizada:', especialidadNombre)
       
       return `Perfecto, confirma los datos de tu cita:\n\n` +
              `👤 Paciente: ${this.appointmentData.nombre}\n` +
@@ -556,11 +573,24 @@ export default {
     
     async crearCita() {
       try {
+        console.log('🔍 Buscando médicos para especialidad:', this.appointmentData.especialidad)
+        console.log('📋 Datos completos de la cita:', this.appointmentData)
+        
         // Obtener médico por especialidad
-        const medicosResponse = await axios.get(`/api/chatbot/medicos/${encodeURIComponent(this.appointmentData.especialidad)}`)
+        const url = `/api/chatbot/medicos/${encodeURIComponent(this.appointmentData.especialidad)}`
+        console.log('🔗 URL de la API:', url)
+        
+        const medicosResponse = await axios.get(url)
         const medicos = medicosResponse.data
         
-        if (medicos.length === 0) {
+        console.log('📊 Médicos encontrados:', medicos.length, medicos)
+        console.log('📊 Response completa:', medicosResponse)
+        console.log('📊 Tipo de medicos:', typeof medicos)
+        console.log('📊 Es array?', Array.isArray(medicos))
+        
+        if (!medicos || medicos.length === 0) {
+          console.log('❌ No se encontraron médicos para:', this.appointmentData.especialidad)
+          console.log('❌ medicos es:', medicos)
           this.resetAppointmentData()
           return 'Lo siento, no hay médicos disponibles para esa especialidad en este momento. Por favor, contacta directamente con la clínica.'
         }

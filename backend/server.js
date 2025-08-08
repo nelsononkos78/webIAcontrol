@@ -8,6 +8,48 @@ require('dotenv').config({ path: './config.env' });
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Función para respuestas predefinidas del chatbot
+function getChatbotResponse(message) {
+  if (message.includes('hola') || message.includes('buenos días') || message.includes('buenas')) {
+    return '¡Hola! Soy Lucía, recepcionista del Onkos Instituto del Cáncer. ¿En qué puedo ayudarte hoy?';
+  }
+  
+  if (message.includes('información') || message.includes('clínica') || message.includes('servicios')) {
+    return 'Te cuento sobre nuestra clínica:\n\n🏥 **Onkos Instituto del Cáncer**\n\n**Servicios que ofrecemos:**\n• Consultas médicas\n• Quimioterapia\n• Radioterapia\n• Cirugía oncológica\n• Psicología oncológica\n• Nutrición especializada\n\n**Horarios:** Lunes a Viernes 8:00 AM - 6:00 PM\n\n**Contacto:** +51 1 234 5678\n**Emergencias:** +51 300 123 4567';
+  }
+  
+  if (message.includes('especialidad') || message.includes('especialidades') || message.includes('médico')) {
+    return 'Nuestras especialidades médicas son:\n\n👨‍⚕️ **Especialidades:**\n• Oncología Médica\n• Radioterapia\n• Cirugía Oncológica\n• Psicología Oncológica\n• Nutrición Oncológica\n• Medicina Nuclear\n• Hematología Oncológica\n\n**Nuestros especialistas:**\n• Dr. Carlos Mendoza (Oncólogo)\n• Dra. Ana García (Radioterapeuta)\n• Dr. Luis Rodríguez (Cirujano)\n• Dra. Carmen López (Psicóloga)';
+  }
+  
+  if (message.includes('cita') || message.includes('agendar') || message.includes('consulta')) {
+    return 'Perfecto, te ayudo a agendar tu cita. ¿Cuál es tu nombre completo?';
+  }
+  
+  if (message.includes('horario') || message.includes('horarios') || message.includes('cuándo')) {
+    return 'Nuestros horarios de atención:\n\n📅 **Horarios de la clínica:**\n• Lunes a Viernes: 8:00 AM - 6:00 PM\n• Sábados: 8:00 AM - 12:00 PM\n• Domingos: Cerrado\n\n📞 **Para citas:** +51 1 234 5678\n🚨 **Emergencias:** +51 300 123 4567';
+  }
+  
+  if (message.includes('dirección') || message.includes('dónde') || message.includes('ubicación')) {
+    return 'Nos encuentras en:\n\n📍 **Dirección:**\nAv. Arequipa 123, Lima, Perú\n\n🚗 **Cómo llegar:**\n• Metro: Estación Central\n• Bus: Líneas 1, 2, 3\n• Taxi: 10 min desde el centro';
+  }
+  
+  if (message.includes('precio') || message.includes('costo') || message.includes('tarifa')) {
+    return 'Los precios varían según el tipo de consulta y tratamiento. Te recomiendo que llames al +51 1 234 5678 para obtener información específica sobre costos y cobertura de seguros.';
+  }
+  
+  if (message.includes('emergencia') || message.includes('urgente')) {
+    return '🚨 **Para emergencias médicas:**\n\n📞 Llama inmediatamente al: +51 300 123 4567\n\n⏰ **Atención 24/7 para emergencias oncológicas**\n\nSi es una emergencia grave, también puedes acudir directamente a nuestra clínica.';
+  }
+  
+  if (message.includes('gracias') || message.includes('thank')) {
+    return '¡De nada! Estoy aquí para ayudarte. Si tienes más preguntas, no dudes en preguntarme. 😊';
+  }
+  
+  // Respuesta por defecto
+  return 'Hola, soy Lucía de Onkos Instituto del Cáncer. Puedo ayudarte con información sobre nuestros servicios, especialidades, horarios o agendar citas. ¿Qué necesitas saber?';
+}
+
 // Probar conexión a la base de datos al iniciar
 testConnection().then(connected => {
   if (!connected) {
@@ -17,7 +59,17 @@ testConnection().then(connected => {
 
 // Configuración de CORS
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:3000', 'http://127.0.0.1:8080'],
+  origin: [
+    'http://localhost:8080', 
+    'http://localhost:3000', 
+    'http://127.0.0.1:8080',
+    'http://192.168.1.123:8080',
+    'http://192.168.1.123:3000',
+    'http://onkosweb.com:8080',
+    'http://onkosweb.com:3000',
+    'https://onkosweb.com:8080',
+    'https://onkosweb.com:3000'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -97,22 +149,8 @@ Recuerda: Eres una persona real, habla naturalmente. NO hagas agendamientos manu
       { role: 'user', content: message }
     ];
 
-    // Llamada a la API de Groq
-    const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-      model: 'moonshotai/kimi-k2-instruct',
-      messages: messages,
-      temperature: 0.7,
-      max_tokens: 1000,
-      top_p: 1,
-      stream: false
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const botResponse = response.data.choices[0].message.content;
+    // Respuestas predefinidas para el chatbot
+    const botResponse = getChatbotResponse(message.toLowerCase());
 
     res.json({
       response: botResponse,
@@ -449,22 +487,13 @@ app.post('/api/chatbot/validar-paciente', async (req, res) => {
     
     // Buscar paciente existente
     const pacienteExistente = await query(`
-      SELECT id, nombre, dni, telefono, correo, fecha_nacimiento, estado
+      SELECT id, nombre, dni, telefono, correo, fecha_nacimiento
       FROM pacientes 
       WHERE dni = $1
     `, [dni]);
     
     if (pacienteExistente.rows.length > 0) {
       const paciente = pacienteExistente.rows[0];
-      
-      // Verificar estado
-      if (paciente.estado === 'inactivo') {
-        return res.json({
-          tipo: 'paciente_inactivo',
-          paciente: paciente,
-          mensaje: 'Paciente encontrado pero está inactivo. ¿Deseas reactivarlo?'
-        });
-      }
       
       // Comparar datos
       const diferencias = [];
@@ -518,7 +547,7 @@ app.put('/api/chatbot/actualizar-paciente/:id', async (req, res) => {
       UPDATE pacientes 
       SET nombre = $1, telefono = $2, correo = $3, fecha_nacimiento = $4
       WHERE id = $5
-      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento, estado
+      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento
     `, [nombre, telefono, correo, fecha_nacimiento, id]);
     
     res.json({
@@ -540,9 +569,9 @@ app.put('/api/chatbot/reactivar-paciente/:id', async (req, res) => {
     
     const pacienteReactivado = await query(`
       UPDATE pacientes 
-      SET estado = 'activo'
+      SET fecha_registro = CURRENT_TIMESTAMP
       WHERE id = $1
-      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento, estado
+      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento
     `, [id]);
     
     res.json({
@@ -574,10 +603,10 @@ app.post('/api/chatbot/crear-paciente', async (req, res) => {
     }
     
     const nuevoPaciente = await query(`
-      INSERT INTO pacientes (nombre, dni, telefono, correo, fecha_nacimiento, estado)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento, estado
-    `, [nombre, dni, telefono, correo, fecha_nacimiento, 'activo']);
+      INSERT INTO pacientes (nombre, dni, telefono, correo, fecha_nacimiento)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, nombre, dni, telefono, correo, fecha_nacimiento
+    `, [nombre, dni, telefono, correo, fecha_nacimiento]);
     
     res.json({
       success: true,
@@ -596,6 +625,8 @@ app.get('/api/chatbot/medicos/:especialidad', async (req, res) => {
   try {
     const { especialidad } = req.params;
     
+    console.log('🔍 Buscando médicos para especialidad:', especialidad);
+    
     const medicos = await query(`
       SELECT m.id, m.nombre, m.especialidad_id, e.nombre as especialidad_nombre
       FROM medicos m
@@ -603,6 +634,9 @@ app.get('/api/chatbot/medicos/:especialidad', async (req, res) => {
       WHERE LOWER(e.nombre) LIKE LOWER($1) AND m.estado = 'activo'
       ORDER BY m.nombre
     `, [`%${especialidad}%`]);
+    
+    console.log('📊 Médicos encontrados:', medicos.rows.length);
+    console.log('📋 Resultados:', medicos.rows);
     
     res.json(medicos.rows);
     
@@ -761,7 +795,9 @@ app.put('/api/admin/citas/:id/cancelar', verifyAdminToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor Onkos Instituto del Cáncer ejecutándose en puerto ${PORT}`);
-  console.log(`📡 API disponible en http://localhost:${PORT}`);
+  console.log(`📡 API disponible en:`);
+  console.log(`   • Local: http://localhost:${PORT}`);
+  console.log(`   • Red: http://192.168.1.123:${PORT}`);
 }); 

@@ -213,41 +213,37 @@ const initDatabase = async () => {
         dni: '11111111',
         telefono: '+51 999 111 111',
         correo: 'maria.gonzalez@email.com',
-        fecha_nacimiento: '1985-03-15',
-        estado: 'activo'
+        fecha_nacimiento: '1985-03-15'
       },
       {
         nombre: 'Juan Pérez',
         dni: '22222222',
         telefono: '+51 999 222 222',
         correo: 'juan.perez@email.com',
-        fecha_nacimiento: '1978-07-22',
-        estado: 'activo'
+        fecha_nacimiento: '1978-07-22'
       },
       {
         nombre: 'Carmen López',
         dni: '33333333',
         telefono: '+51 999 333 333',
         correo: 'carmen.lopez@email.com',
-        fecha_nacimiento: '1990-11-08',
-        estado: 'activo'
+        fecha_nacimiento: '1990-11-08'
       },
       {
         nombre: 'Roberto Silva',
         dni: '44444444',
         telefono: '+51 999 444 444',
         correo: 'roberto.silva@email.com',
-        fecha_nacimiento: '1965-05-12',
-        estado: 'inactivo'
+        fecha_nacimiento: '1965-05-12'
       }
     ];
     
     for (const paciente of pacientesEjemplo) {
       await query(`
-        INSERT INTO pacientes (nombre, dni, telefono, correo, fecha_nacimiento, estado) 
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO pacientes (nombre, dni, telefono, correo, fecha_nacimiento) 
+        VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT (dni) DO NOTHING
-      `, [paciente.nombre, paciente.dni, paciente.telefono, paciente.correo, paciente.fecha_nacimiento, paciente.estado]);
+      `, [paciente.nombre, paciente.dni, paciente.telefono, paciente.correo, paciente.fecha_nacimiento]);
     }
     
     console.log('\n🎉 ¡Base de datos inicializada exitosamente!');

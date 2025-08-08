@@ -90,3 +90,34 @@ CREATE TABLE historial_citas (
 
 -- Índice para historial por cita
 CREATE INDEX idx_historial_por_cita ON historial_citas(cita_id);
+
+-- Roles del sistema
+CREATE TABLE roles (
+  id SERIAL PRIMARY KEY,
+  nombre TEXT UNIQUE NOT NULL,
+  descripcion TEXT
+);
+
+-- Usuarios del sistema
+CREATE TABLE usuarios (
+  id SERIAL PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  correo TEXT UNIQUE NOT NULL,
+  contraseña TEXT NOT NULL,
+  estado TEXT DEFAULT 'activo',
+  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Relación usuarios-roles
+CREATE TABLE usuario_rol (
+  id SERIAL PRIMARY KEY,
+  usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+  rol_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+  UNIQUE(usuario_id, rol_id)
+);
+
+-- Índices para usuarios
+CREATE INDEX idx_usuarios_correo ON usuarios(correo);
+CREATE INDEX idx_usuarios_estado ON usuarios(estado);
+CREATE INDEX idx_usuario_rol_usuario ON usuario_rol(usuario_id);
+CREATE INDEX idx_usuario_rol_rol ON usuario_rol(rol_id);
